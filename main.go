@@ -40,18 +40,34 @@ func killOrAvoid(myHead Coord, bodyPart Coord, isMoveSafe map[string]bool, enemy
 }
 */
 
-func avoidCollision(myHead Coord, bodyPart Coord, isMoveSafe map[string]bool) {
-  if(myHead.X == bodyPart.X){
-    if(myHead.Y + 1 == bodyPart.Y) {
-      isMoveSafe["up"] = false
-    } else if(myHead.Y - 1 == bodyPart.Y) {
-      isMoveSafe["down"] = false
+func avoidCollision(myHead Coord, bodyPart Coord, isMoveSafe map[string]bool, width int, height int) {
+  if GAME_MODE != Wrapped {
+    if(myHead.X == bodyPart.X){
+      if(myHead.Y + 1 == bodyPart.Y) {
+        isMoveSafe["up"] = false
+      } else if(myHead.Y - 1 == bodyPart.Y) {
+        isMoveSafe["down"] = false
+      }
+    } else if(myHead.Y == bodyPart.Y){
+      if(myHead.X + 1 == bodyPart.X) {
+        isMoveSafe["right"] = false
+      } else if(myHead.X - 1 == bodyPart.X) {
+        isMoveSafe["left"] = false
+      }
     }
-  } else if(myHead.Y == bodyPart.Y){
-    if(myHead.X + 1 == bodyPart.X) {
-      isMoveSafe["right"] = false
-    } else if(myHead.X - 1 == bodyPart.X) {
-      isMoveSafe["left"] = false
+  } else {
+    if(myHead.X == bodyPart.X){
+      if((myHead.Y + 1)%height == bodyPart.Y) {
+        isMoveSafe["up"] = false
+      } else if((myHead.Y - 1)%height == bodyPart.Y) {
+        isMoveSafe["down"] = false
+      }
+    } else if(myHead.Y == bodyPart.Y){
+      if((myHead.X + 1)%width == bodyPart.X) {
+        isMoveSafe["right"] = false
+      } else if(myHead.X == (bodyPart.X +1)%width) {
+        isMoveSafe["left"] = false
+      }
     }
   }
 }
@@ -73,20 +89,6 @@ func move(state GameState) BattlesnakeMoveResponse {
 
 	// We've included code to prevent your Battlesnake from moving backwards
 	myHead := state.You.Body[0] // Coordinates of your head
-	myNeck := state.You.Body[1] // Coordinates of your "neck"
-
-	if myNeck.X < myHead.X { // Neck is left of head, don't move left
-		isMoveSafe["left"] = false
-
-	} else if myNeck.X > myHead.X { // Neck is right of head, don't move right
-		isMoveSafe["right"] = false
-
-	} else if myNeck.Y < myHead.Y { // Neck is below head, don't move down
-		isMoveSafe["down"] = false
-
-	} else if myNeck.Y > myHead.Y { // Neck is above head, don't move up
-		isMoveSafe["up"] = false
-	}
 
 	// TODO: Step 1 - Prevent your Battlesnake from moving out of bounds
 	if GAME_MODE != Wrapped {
@@ -105,19 +107,19 @@ func move(state GameState) BattlesnakeMoveResponse {
   	}
 	}
 
-  if GAME_MODE != Wrapped {
-	  // Prevent Killer Whale from colliding with itself or other Battlesnakes
-    for _, snake := range state.Board.Snakes {
-      if(snake.ID != state.You.ID) {
-        // Next turn the head will be replaced by neck
-        avoidCollision(myHead, snake.Body[0], isMoveSafe)
-  	    // killOrAvoid(myHead, snake.Body[0], isMoveSafe, snake.Length, state.You.Length)
-      }
-      for j := 1; j < len(snake.Body) - 1; j++ { // We ignore the queue, it will move
-  	    avoidCollision(myHead, snake.Body[j], isMoveSafe)
-      }
+  
+  // Prevent Killer Whale from colliding with itself or other Battlesnakes
+  for _, snake := range state.Board.Snakes {
+    if(snake.ID != state.You.ID) {
+      // Next turn the head will be replaced by neck
+      avoidCollision(myHead, snake.Body[0], isMoveSafe, state.Board.Width, state.Board.Height)
+      // killOrAvoid(myHead, snake.Body[0], isMoveSafe, snake.Length, state.You.Length)
+    }
+    for j := 1; j < len(snake.Body) - 1; j++ { // We ignore the queue, it will move
+      avoidCollision(myHead, snake.Body[j], isMoveSafe, state.Board.Width, state.Board.Height)
     }
   }
+  
 
 	// Are there any safe moves left?
 	safeMoves := []string{}
