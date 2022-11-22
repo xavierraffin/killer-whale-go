@@ -34,6 +34,28 @@ func end(state GameState) {
 	log.Printf("GAME OVER\n\n")
 }
 
+/*
+func killOrAvoid(myHead Coord, bodyPart Coord, isMoveSafe map[string]bool, enemyLength int, myLength int) {
+  if()
+}
+*/
+
+func avoidCollision(myHead Coord, bodyPart Coord, isMoveSafe map[string]bool) {
+  if(myHead.X == bodyPart.X){
+    if(myHead.Y + 1 == bodyPart.Y) {
+      isMoveSafe["up"] = false
+    } else if(myHead.Y - 1 == bodyPart.Y) {
+      isMoveSafe["down"] = false
+    }
+  } else if(myHead.Y == bodyPart.Y){
+    if(myHead.X + 1 == bodyPart.X) {
+      isMoveSafe["right"] = false
+    } else if(myHead.X - 1 == bodyPart.X) {
+      isMoveSafe["left"] = false
+    }
+  }
+}
+
 // move is called on every turn and returns your next move
 // Valid moves are "up", "down", "left", or "right"
 // See https://docs.battlesnake.com/api/example-move for available data
@@ -67,14 +89,35 @@ func move(state GameState) BattlesnakeMoveResponse {
 	}
 
 	// TODO: Step 1 - Prevent your Battlesnake from moving out of bounds
-	// boardWidth := state.Board.Width
-	// boardHeight := state.Board.Height
+	if GAME_MODE != Wrapped {
+    if myHead.X == 0 { 
+		  isMoveSafe["left"] = false
+  
+  	} else if myHead.X == state.Board.Width -1 { 
+  		isMoveSafe["right"] = false
+  	}
+    if myHead.Y == 0 { 
+  		isMoveSafe["down"] = false
+  
+  	} else if myHead.Y == state.Board.Height -1 {
+  		isMoveSafe["up"] = false
+  
+  	}
+	}
 
-	// TODO: Step 2 - Prevent your Battlesnake from colliding with itself
-	// mybody := state.You.Body
-
-	// TODO: Step 3 - Prevent your Battlesnake from colliding with other Battlesnakes
-	// opponents := state.Board.Snakes
+  if GAME_MODE != Wrapped {
+	  // Prevent Killer Whale from colliding with itself or other Battlesnakes
+    for _, snake := range state.Board.Snakes {
+      if(snake.ID != state.You.ID) {
+        // Next turn the head will be replaced by neck
+        avoidCollision(myHead, snake.Body[0], isMoveSafe)
+  	    // killOrAvoid(myHead, snake.Body[0], isMoveSafe, snake.Length, state.You.Length)
+      }
+      for j := 1; j < len(snake.Body) - 1; j++ { // We ignore the queue, it will move
+  	    avoidCollision(myHead, snake.Body[j], isMoveSafe)
+      }
+    }
+  }
 
 	// Are there any safe moves left?
 	safeMoves := []string{}
