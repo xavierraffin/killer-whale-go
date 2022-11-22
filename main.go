@@ -1,17 +1,5 @@
 package main
 
-// Welcome to
-// __________         __    __  .__                               __
-// \______   \_____ _/  |__/  |_|  |   ____   ______ ____ _____  |  | __ ____
-//  |    |  _/\__  \\   __\   __\  | _/ __ \ /  ___//    \\__  \ |  |/ // __ \
-//  |    |   \ / __ \|  |  |  | |  |_\  ___/ \___ \|   |  \/ __ \|    <\  ___/
-//  |________/(______/__|  |__| |____/\_____>______>___|__(______/__|__\\_____>
-//
-// This file can be a nice home for your Battlesnake logic and helper functions.
-//
-// To get you started we've included code to prevent your Battlesnake from moving backwards.
-// For more info see docs.battlesnake.com
-
 import (
 	"log"
 	"math/rand"
@@ -35,6 +23,10 @@ func info() BattlesnakeInfoResponse {
 // start is called when your Battlesnake begins a game
 func start(state GameState) {
 	log.Println("GAME START")
+	// printObj(state)
+
+	GAME_MODE = ReadMode(state.Game.Ruleset.Name)
+	log.Printf("Game mode is %s", GAME_MODE)
 }
 
 // end is called when your Battlesnake finishes a game
@@ -46,6 +38,9 @@ func end(state GameState) {
 // Valid moves are "up", "down", "left", or "right"
 // See https://docs.battlesnake.com/api/example-move for available data
 func move(state GameState) BattlesnakeMoveResponse {
+
+	GAME_MODE = ReadMode(state.Game.Ruleset.Name)
+	log.Printf("MOVE mode is %s", GAME_MODE)
 
 	isMoveSafe := map[string]bool{
 		"up":    true,
