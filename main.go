@@ -6,7 +6,10 @@ import (
 )
 
   var DEATH_PENALTY = -100
-  var KILL_BONUS = 1
+  var HAZARD_PENALTY = -5
+  var KILL_BONUS = 10
+  var FOOD_BENEFIT_CRITICAL = 19 
+  var FOOD_BENEFIT_URGENT = 1
 
 // info is called when you create your Battlesnake on play.battlesnake.com
 // and controls your Battlesnake's appearance
@@ -141,6 +144,83 @@ func avoidCollision(myHead Coord, bodyPart Coord, isMoveSafe map[string]bool, wi
   }
 }
 
+func evaluateFoodBenefits(myHead Coord, food Coord, health int, isMoveBeneficial  map[string]int, width int, height int) {
+  var colisionScore = 0
+  if(health <= 6) {
+    colisionScore = FOOD_BENEFIT_CRITICAL
+  } else if(health <= 32) {
+    colisionScore = FOOD_BENEFIT_URGENT
+  } 
+  if GAME_MODE != Wrapped {
+    if(myHead.X == food.X){
+      if(myHead.Y + 1 == food.Y) {
+        isMoveBeneficial["up"] += colisionScore
+      } else if(myHead.Y - 1 == food.Y) {
+        isMoveBeneficial["down"] += colisionScore
+      }
+    } else if(myHead.Y == food.Y){
+      if(myHead.X + 1 == food.X) {
+        isMoveBeneficial["right"] += colisionScore
+      } else if(myHead.X - 1 == food.X) {
+        isMoveBeneficial["left"] += colisionScore
+      }
+    }
+  } else {
+    if(myHead.X == food.X){
+      if((myHead.Y + 1)%height == food.Y) {
+        isMoveBeneficial["up"] += colisionScore
+      } else if(myHead.Y == (food.Y +1)%height) {
+        isMoveBeneficial["down"] += colisionScore
+      }
+    } else if(myHead.Y == food.Y){
+      if((myHead.X + 1)%width == food.X) {
+        isMoveBeneficial["right"] += colisionScore
+      } else if(myHead.X == (food.X +1)%width) {
+        isMoveBeneficial["left"] += colisionScore
+      }
+    }
+  }
+}
+
+
+func evaluateHazardBenefits(myHead Coord, hazard Coord, health int, isMoveBeneficial  map[string]int, width int, height int) {
+  var colisionScore = 0
+  if(health <= 16) {
+    colisionScore = DEATH_PENALTY
+  } else if(health <= 60) {
+    colisionScore = HAZARD_PENALTY
+  } 
+  if GAME_MODE != Wrapped {
+    if(myHead.X == hazard.X){
+      if(myHead.Y + 1 == hazard.Y) {
+        isMoveBeneficial["up"] += colisionScore
+      } else if(myHead.Y - 1 == hazard.Y) {
+        isMoveBeneficial["down"] += colisionScore
+      }
+    } else if(myHead.Y == hazard.Y){
+      if(myHead.X + 1 == hazard.X) {
+        isMoveBeneficial["right"] += colisionScore
+      } else if(myHead.X - 1 == hazard.X) {
+        isMoveBeneficial["left"] += colisionScore
+      }
+    }
+  } else {
+    if(myHead.X == hazard.X){
+      if((myHead.Y + 1)%height == hazard.Y) {
+        isMoveBeneficial["up"] += colisionScore
+      } else if(myHead.Y == (hazard.Y +1)%height) {
+        isMoveBeneficial["down"] += colisionScore
+      }
+    } else if(myHead.Y == hazard.Y){
+      if((myHead.X + 1)%width == hazard.X) {
+        isMoveBeneficial["right"] += colisionScore
+      } else if(myHead.X == (hazard.X +1)%width) {
+        isMoveBeneficial["left"] += colisionScore
+      }
+    }
+  }
+}
+
 // move is called on every turn and returns your next move
 // Valid moves are "up", "down", "left", or "right"
 // See https://docs.battlesnake.com/api/example-move for available data
@@ -193,6 +273,12 @@ func move(state GameState) BattlesnakeMoveResponse {
     for j := 1; j < len(snake.Body) - 1; j++ { // We ignore the queue, it will move
       avoidCollision(myHead, snake.Body[j], isMoveSafe, state.Board.Width, state.Board.Height)
     }
+  }
+	for _, food := range state.Board.Food {
+    evaluateFoodBenefits(myHead, food, state.You.Health, isMoveBeneficial, state.Board.Width, state.Board.Height)
+  }
+  for _, hazard := range state.Board.Hazards {
+    evaluateHazardBenefits(myHead, hazard, state.You.Health, isMoveBeneficial, state.Board.Width, state.Board.Height)
   }
   
 
